@@ -11,5 +11,7 @@ enum AccessibilityError: Error {
     /// 原始的 AXError 错误
     case error(AXError)
     /// 类型转换错误
-    case typeError(String)
+    case unexpectedTypeError(expected: Any.Type, actual: Any.Type)
+    /// 逻辑错误
+    case logicError(String)
 }

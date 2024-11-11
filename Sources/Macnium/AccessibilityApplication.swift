@@ -6,13 +6,23 @@
 //
 import AppKit
 
+/// 具有指定运行应用程序的辅助功能对象
 struct AccessibilityApplication {
+    /// 元素根节点
     let root: AccessibilityElement
+
+    /// 使用具有指定进程 ID 的应用程序创建顶级辅助功能对象
+    /// - Parameter
+    ///    - pid: 应用程序的进程 ID
+    init(pid: pid_t) {
+        let element = AXUIElementCreateApplication(pid)
+        self.root = AccessibilityElement(element)
+    }
 }
 
 extension AccessibilityApplication {
     /// 使用具有指定运行应用程序的辅助功能对象创建顶级辅助功能对象
-    init?(application: NSRunningApplication) {
+    init(application: NSRunningApplication) {
         self.init(pid: application.processIdentifier)
     }
 
@@ -24,13 +34,6 @@ extension AccessibilityApplication {
 
         self.init(pid: app.processIdentifier)
     }
-
-    /// 使用具有指定进程 ID 的应用程序创建顶级辅助功能对象
-    /// - Parameter
-    ///    - pid: 应用程序的进程 ID
-    init(pid: pid_t) {
-        self.root = AccessibilityElement(pid: pid)
-    }
 }
 
 extension AccessibilityApplication {
@@ -38,16 +41,16 @@ extension AccessibilityApplication {
         return root.find { predicate($0) }
     }
 
-    func visit(_ element: AccessibilityElement, _ deep: Int, _ block: (AccessibilityElement, Int) -> Void) {
-        block(element, deep)
-        if element.role == "AXPopUpButton" {
+    func visit(_ element: AccessibilityElement, _ deep: Int, _ block: (AccessibilityElement, Int) throws -> Void) throws {
+        try block(element, deep)
+        if try element.role == .button {
             element.perform(.press)
             // wait 1s
             usleep(1000000)
             print("Children", element.children)
         }
         for element in element.children {
-            visit(element, deep + 1, block)
+            try visit(element, deep + 1, block)
         }
     }
 }
