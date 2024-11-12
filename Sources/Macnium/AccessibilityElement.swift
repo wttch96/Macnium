@@ -196,3 +196,26 @@ extension AccessibilityElement {
         return nil
     }
 }
+
+// MARK: - 原类型扩展
+
+private extension AXUIElement {
+    var pid: pid_t? {
+        var pid: pid_t = 0
+        let result = AXUIElementGetPid(self, &pid)
+        guard result == .success else { return nil }
+        return pid
+    }
+
+    func attribute<T>(_ attribute: AccessibilityElementAttributeKey<T>) -> T? {
+        var value: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(self, attribute.key as CFString, &value)
+        guard result == .success else {
+            return nil
+        }
+        guard let value = value as? T else {
+            return nil
+        }
+        return value
+    }
+}
