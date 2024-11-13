@@ -25,7 +25,7 @@ struct AccessibilityElement: CustomStringConvertible, @unchecked Sendable {
 
     var description: String {
         do {
-            return try "[\(role)]: \(self.description0)"
+            return try "[\(role)]: \(description0 ?? "")"
         } catch {
             return error.localizedDescription
         }
@@ -34,14 +34,7 @@ struct AccessibilityElement: CustomStringConvertible, @unchecked Sendable {
 
 // MARK: - 原类型扩展
 
-private extension AXUIElement {
-    var pid: pid_t? {
-        var pid: pid_t = 0
-        let result = AXUIElementGetPid(self, &pid)
-        guard result == .success else { return nil }
-        return pid
-    }
-
+fileprivate extension AXUIElement {
     func attributesAsStrings() throws -> [String] {
         var names: CFArray?
         let error = AXUIElementCopyAttributeNames(self, &names)
@@ -106,11 +99,12 @@ extension AccessibilityElement {
     }
 }
 
-// 这些属性相对没那么关注, 所以不会在初始化时获取, 而是在需要时获取
-
 extension AccessibilityElement {
     var pid: pid_t? {
-        original.pid
+        var pid: pid_t = 0
+        let result = AXUIElementGetPid(original, &pid)
+        guard result == .success else { return nil }
+        return pid
     }
 
     /// 角色或类型, 表示此辅助功能对象的类型(例如，AXButton).
@@ -154,32 +148,6 @@ extension AccessibilityElement {
     }
 }
 
-// MARK: - 行为
-
-enum AccessibilityElementAction: String {
-    /// 模拟单击操作, 例如点击按钮.
-    case press
-    /// 模拟按下 Return 键
-    case confirm
-
-    var action: CFString {
-        let action = switch self {
-        case .press:
-            kAXPressAction
-        case .confirm:
-            kAXConfirmAction
-        }
-        return action as CFString
-    }
-}
-
-extension AccessibilityElement {
-    /// 模拟单击操作, 例如点击按钮.
-    func perform(_ action: AccessibilityElementAction) -> Bool {
-        let result = AXUIElementPerformAction(original, action.action)
-        return result == .success
-    }
-}
 
 // MARK: - 元素定位
 
@@ -194,28 +162,5 @@ extension AccessibilityElement {
             }
         }
         return nil
-    }
-}
-
-// MARK: - 原类型扩展
-
-private extension AXUIElement {
-    var pid: pid_t? {
-        var pid: pid_t = 0
-        let result = AXUIElementGetPid(self, &pid)
-        guard result == .success else { return nil }
-        return pid
-    }
-
-    func attribute<T>(_ attribute: AccessibilityElementAttributeKey<T>) -> T? {
-        var value: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(self, attribute.key as CFString, &value)
-        guard result == .success else {
-            return nil
-        }
-        guard let value = value as? T else {
-            return nil
-        }
-        return value
     }
 }

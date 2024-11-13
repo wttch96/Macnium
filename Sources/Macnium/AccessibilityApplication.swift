@@ -26,7 +26,7 @@ extension AccessibilityApplication {
         try self.init(pid: application.processIdentifier)
     }
 
-    /// 使用具有指定 bundle identifier 的应用程序创建顶级辅助功能对象
+    /// 使用具有指定 bundle identifier 的应用程序创建顶级辅助功能对象, 只返回第一个
     init?(withBundleIdentifier: String) throws {
         guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: withBundleIdentifier).first else {
             return nil
@@ -40,6 +40,25 @@ extension AccessibilityApplication {
             .first { $0.localizedName?.contains(name) ?? false }?.processIdentifier
         guard let pid = pid else { return nil }
         try self.init(pid: pid)
+    }
+}
+
+extension AccessibilityApplication {
+    /// 获取所有运行的应用程序的辅助功能对象
+    /// - Returns: 辅助功能对象数组
+    static func all() -> [AccessibilityApplication] {
+        NSWorkspace.shared.runningApplications
+            .filter { !$0.isTerminated }
+            .compactMap { try? AccessibilityApplication(pid: $0.processIdentifier) }
+    }
+
+    /// 使用具有指定 bundle identifier 的应用程序创建顶级辅助功能对象
+    /// - Parameter withBundleIdentifier: bundle identifier
+    /// - Returns: 辅助功能对象数组
+    static func allForBundle(withBundleIdentifier: String) -> [AccessibilityApplication] {
+        NSRunningApplication
+            .runningApplications(withBundleIdentifier: withBundleIdentifier)
+            .compactMap { try? AccessibilityApplication(pid: $0.processIdentifier) }
     }
 }
 

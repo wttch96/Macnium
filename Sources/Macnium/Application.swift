@@ -13,12 +13,11 @@ struct AXApplication {}
 extension AXApplication {
     func test() throws {
         do {
-            // let appId = "com.tencent.xinWeChat"
-            let appId = "com.roadesign.Codyeapp"
-            guard let appElement = try AccessibilityApplication(withBundleIdentifier: appId) else { return
-            }
+            let appId = "com.tencent.xinWeChat"
+            // let appId = "com.roadesign.Codyeapp"
+            let appElement = try AccessibilityApplication(pid: 1401)
             try appElement.visit(appElement.root, 0) { element, deep in
-                print(String(repeating: "  ", count: deep), element)
+                print(String(repeating: "  ", count: deep), element, element.actions())
             }
         } catch {
             print(error.localizedDescription)
